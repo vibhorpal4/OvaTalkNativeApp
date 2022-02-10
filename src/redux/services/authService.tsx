@@ -1,6 +1,7 @@
 import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/dist/query/react';
 
-const baseUrl = `http://localhost:5000`;
+const baseUrl = `https://ovatalk.herokuapp.com`;
+// const baseUrl = `http://172.20.10.7:5000`;
 
 export const authApi = createApi({
   reducerPath: 'authApi',
@@ -23,7 +24,11 @@ export const authApi = createApi({
         body: user,
       }),
     }),
+    logout: builder.query({
+      query: () => '/api/v1/auth/logout',
+      providesTags: ['Auth'],
+    }),
   }),
 });
 
-export const {useLoginMutation, useRegisterMutation} = authApi;
+export const {useLoginMutation, useRegisterMutation, useLogoutQuery} = authApi;

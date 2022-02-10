@@ -17,7 +17,12 @@ import Notification from '../Screens/Notification';
 import Login from '../Screens/Login';
 import Register from '../Screens/Register';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {ActivityIndicator, View} from 'react-native';
+import {ActivityIndicator, Alert, Image, Text, View} from 'react-native';
+import {useDispatch, useSelector} from 'react-redux';
+import {useGetMyProfileQuery} from '../redux/services/profileService';
+import {logoutState} from '../redux/authSlice';
+import UpdateProfile from '../Screens/UpdateProfile';
+import ProfileImage from '../assets/images/Profile.svg';
 
 const Bottom_Stack = createBottomTabNavigator();
 const Home_Stack = createNativeStackNavigator();
@@ -55,11 +60,12 @@ export const ProfileStack = () => {
       screenOptions={{headerShown: false}}
       initialRouteName="Profile">
       <Profile_Stack.Screen name="Profile" component={Profile} />
+      <Profile_Stack.Screen name="UpdateProfile" component={UpdateProfile} />
     </Profile_Stack.Navigator>
   );
 };
 
-export const BottomStack = () => {
+export const BottomStack = ({profile}: any) => {
   return (
     <Bottom_Stack.Navigator
       screenOptions={{
@@ -104,7 +110,7 @@ export const BottomStack = () => {
             <MaterialCommunityIcons
               name="plus-circle"
               color={focused ? colors.primaryColor : color}
-              size={25}
+              size={30}
             />
           ),
         }}
@@ -126,13 +132,49 @@ export const BottomStack = () => {
         name="ProfileStack"
         component={ProfileStack}
         options={{
-          tabBarIcon: ({focused, color}) => (
-            <MaterialCommunityIcons
-              name="account-circle"
-              color={focused ? colors.primaryColor : color}
-              size={25}
-            />
-          ),
+          tabBarIcon: ({focused, color}) => {
+            return (
+              <>
+                {profile === undefined || null ? (
+                  <ActivityIndicator />
+                ) : (
+                  <>
+                    {profile?.user.avatar.url === '' ? (
+                      // <MaterialCommunityIcons
+                      //   name="account-circle"
+                      //   color={focused ? colors.primaryColor : color}
+                      //   size={25}
+                      // />
+                      <View
+                        style={{
+                          backgroundColor: colors.backgroundColor,
+                          borderColor: focused
+                            ? colors.primaryColor
+                            : colors.backgroundColor,
+                          borderWidth: 2,
+                          borderRadius: 50,
+                          padding: 1,
+                        }}>
+                        <ProfileImage height={25} width={25} />
+                      </View>
+                    ) : (
+                      <>
+                        <Image
+                          source={{uri: profile?.user.avatar.url}}
+                          width={25}
+                          height={25}
+                          // style={{
+                          //   borderRadius: 50,
+                          //   borderColor: focused ? colors.primaryColor : null,
+                          // }}
+                        />
+                      </>
+                    )}
+                  </>
+                )}
+              </>
+            );
+          },
         }}
       />
     </Bottom_Stack.Navigator>
@@ -151,33 +193,74 @@ export const AuthStack = () => {
 };
 
 const RootStack = () => {
-  const [authToken, setAuthToken] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState<string | null>(null);
+  const [errors, setErrors] = useState<string | null>(null);
+  const tokn = useSelector(state => state.auth.token);
+  const {isLoading, error, data} = useGetMyProfileQuery();
+  const dispatch = useDispatch();
 
   const getToken = async () => {
     try {
       const userToken = await AsyncStorage.getItem('@token');
-      setAuthToken(userToken);
+      if (userToken) {
+        setAuthToken(userToken);
+        setLoading(false);
+      } else {
+        setAuthToken(null);
+        setLoading(false);
+      }
     } catch (error) {
       console.log(error);
     }
   };
+
   useEffect(() => {
     getToken();
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 3000);
-  }, []);
+    setToken(tokn);
+  }, [tokn]);
 
-  if (isLoading) {
-    return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+  useEffect(() => {
+    setErrors(error);
+  }, [error]);
+
+  const clearToken = async () => {
+    try {
+      await AsyncStorage.clear();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  if (errors) {
+    if (errors.error) {
+      Alert.alert('Error', errors.error);
+      setErrors(null);
+    } else {
+      Alert.alert('Error', errors.data.message);
+      if (errors.status === 401) {
+        clearToken();
+        dispatch(logoutState());
+      }
+      setErrors(null);
+    }
   }
-
-  return authToken ? <BottomStack /> : <AuthStack />;
+  return (
+    <>
+      {isLoading || loading ? (
+        <ActivityIndicator />
+      ) : (
+        <>
+          {authToken || token ? (
+            <BottomStack profile={data ? data : null} />
+          ) : (
+            <AuthStack />
+          )}
+        </>
+      )}
+    </>
+  );
 };
 
 export default RootStack;

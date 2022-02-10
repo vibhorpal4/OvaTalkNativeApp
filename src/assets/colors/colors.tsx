@@ -1,11 +1,11 @@
 interface color {
-  primaryColor: String;
+  primaryColor: string;
   // secondaryColor: '#225170',
-  secondaryColor: String;
-  backgroundColor: String;
-  textDark: String;
-  textLight: String;
-  shadowColor: String;
+  secondaryColor: string;
+  backgroundColor: string;
+  textDark: string;
+  textLight: string;
+  shadowColor: string;
 }
 
 const colors: color = {

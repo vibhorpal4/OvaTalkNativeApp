@@ -14,6 +14,8 @@ target 'Social' do
 
   pod 'react-native-image-picker', :path => '../node_modules/react-native-image-picker'
 
+  pod 'RNSVG', :path => '../node_modules/react-native-svg'
+
   target 'SocialTests' do
     inherit! :complete
     # Pods for testing
