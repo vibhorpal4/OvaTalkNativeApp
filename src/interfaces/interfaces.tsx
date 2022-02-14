@@ -19,4 +19,5 @@ export interface editProfile {
   username: string;
   email: string;
   avatar: any;
+  bio: string;
 }

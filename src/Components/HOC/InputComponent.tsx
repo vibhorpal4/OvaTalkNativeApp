@@ -12,6 +12,8 @@ const InputComponent = ({
   value,
   label,
   helpText,
+  multiline,
+  numberOfLines,
 }: any) => {
   return (
     <SafeAreaView>
@@ -26,6 +28,8 @@ const InputComponent = ({
           secureTextEntry={false || secureTextEntry}
           value={value}
           placeholderTextColor={colors.textLight}
+          multiline={false || multiline}
+          numberOfLines={null || numberOfLines}
         />
       </View>
       {helpText && <Text style={styles.helpText}>*{helpText}</Text>}
@@ -40,9 +44,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 15,
+    // maxWidth: '70%',
+    paddingHorizontal: 30,
   },
   input: {
-    minWidth: '70%',
+    minWidth: '90%',
     // backgroundColor: colors.backgroundColor,
     borderRadius: 10,
     paddingHorizontal: 10,
@@ -64,7 +70,7 @@ const styles = StyleSheet.create({
   helpText: {
     color: colors.textLight,
     fontFamily: 'Poppins-Light',
-    paddingHorizontal: 10,
+    paddingHorizontal: 30,
     marginTop: -15,
   },
 });

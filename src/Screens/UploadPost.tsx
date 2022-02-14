@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Button,
+  FlatList,
   Image,
   Platform,
   StyleSheet,
@@ -40,13 +41,13 @@ const UploadPost = ({navigation}: any) => {
     ]);
   };
 
-  const selectMoreImage = async () => {
-    Alert.alert('Image', 'Choose an option', [
-      {text: 'Camera', onPress: onCamera1},
-      {text: 'Gallery', onPress: onGallery1},
-      {text: 'Cancel', onPress: () => {}},
-    ]);
-  };
+  // const selectMoreImage = async () => {
+  //   Alert.alert('Image', 'Choose an option', [
+  //     {text: 'Camera', onPress: onCamera1},
+  //     {text: 'Gallery', onPress: onGallery1},
+  //     {text: 'Cancel', onPress: () => {}},
+  //   ]);
+  // };
 
   const onCamera = async () => {
     const result = await launchCamera({
@@ -54,6 +55,20 @@ const UploadPost = ({navigation}: any) => {
       mediaType: 'photo',
       saveToPhotos: true,
     });
+    // let data: any = [];
+
+    // result.assets?.forEach((asset: any) => {
+    //   data.push(asset);
+    //   console.log(data);
+    //   setPost({...post, images: data});
+    // });
+    if (result.didCancel) {
+      Alert.alert('Info', 'User close gallery without any selection');
+    }
+    if (result.errorMessage) {
+      Alert.alert('Error', result.errorMessage);
+    }
+
     setPost({...post, images: result.assets});
   };
 
@@ -63,26 +78,51 @@ const UploadPost = ({navigation}: any) => {
       mediaType: 'mixed',
       selectionLimit: 0,
     });
+
+    if (result.didCancel) {
+      Alert.alert('Info', 'User close gallery without any selection');
+    }
+    if (result.errorMessage) {
+      Alert.alert('Error', result.errorMessage);
+    }
+    // let data: any = [];
+
+    // result.assets?.forEach((asset: any) => {
+    //   data.push(asset);
+    //   console.log(data);
+    //   setPost({...post, images: data});
+    // });
+
     setPost({...post, images: result.assets});
   };
 
-  const onCamera1 = async () => {
-    const result = await launchCamera({
-      includeBase64: true,
-      mediaType: 'photo',
-      saveToPhotos: true,
-    });
-    setPost({...post, images: result.assets?.concat(result.assets)});
-  };
+  // const onCamera1 = async () => {
+  //   const result = await launchCamera({
+  //     includeBase64: true,
+  //     mediaType: 'photo',
+  //     saveToPhotos: true,
+  //   });
+  //   result.assets?.forEach((asset: any) => {
+  //     const images = [asset];
+  //     setPost({...post, images});
+  //   });
+  // };
 
-  const onGallery1 = async () => {
-    const result = await launchImageLibrary({
-      includeBase64: true,
-      mediaType: 'mixed',
-      selectionLimit: 0,
-    });
-    setPost({...post, images: result.assets?.concat(result.assets)});
-  };
+  // const onGallery1 = async () => {
+  //   const result = await launchImageLibrary({
+  //     includeBase64: true,
+  //     mediaType: 'mixed',
+  //     selectionLimit: 0,
+  //   });
+
+  //   let data: any = [];
+
+  //   result.assets?.forEach((asset: any) => {
+  //     data.push(asset);
+  //     console.log(data);
+  //     setPost({...post, images: data});
+  //   });
+  // };
 
   const handleSubmit = async () => {
     const formData = new FormData();
@@ -99,12 +139,37 @@ const UploadPost = ({navigation}: any) => {
     });
   };
 
+  const handleGoBack = () => {
+    setPost({
+      caption: '',
+      images: '',
+    });
+    navigation.navigate('HomeStack', {
+      screen: 'Home',
+    });
+  };
+
+  const renderImagePreview = ({item}: any) => {
+    return (
+      <>
+        <Image source={{uri: item.uri}} style={styles.previewImage} />
+        <TouchableOpacity>
+          <MaterialCommunityIcons
+            name="close"
+            size={25}
+            color="white"
+            style={styles.removeImage}
+          />
+        </TouchableOpacity>
+      </>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <SafeAreaView style={{paddingVertical: 5}}>
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('HomeStack', {screen: 'Home'})}>
+          <TouchableOpacity onPress={handleGoBack}>
             <MaterialCommunityIcons
               name="close"
               size={25}
@@ -134,7 +199,7 @@ const UploadPost = ({navigation}: any) => {
             justifyContent: 'center',
             alignItems: 'center',
           }}>
-          {error && <Text>{error.data.message}</Text>}
+          {error && <Text style={{color: 'red'}}>{error.data.message}</Text>}
         </View>
         <TextInput
           style={styles.caption}
@@ -147,16 +212,21 @@ const UploadPost = ({navigation}: any) => {
         <View style={styles.preview}>
           {post?.images ? (
             <>
-              {post.images.map((img: any) => (
-                <Image
-                  key={img.base64}
-                  source={{uri: img.uri}}
-                  style={styles.previewImage}
+              <SafeAreaView>
+                <FlatList
+                  data={post.images}
+                  renderItem={renderImagePreview}
+                  keyExtractor={item => item.base64}
+                  horizontal
                 />
-              ))}
-              <TouchableOpacity onPress={selectMoreImage}>
-                <MaterialCommunityIcons name="plus" size={50} />
-              </TouchableOpacity>
+                {/* <TouchableOpacity onPress={selectMoreImage}>
+                  <MaterialCommunityIcons
+                    name="plus"
+                    size={50}
+                    color={colors.textDark}
+                  />
+                </TouchableOpacity> */}
+              </SafeAreaView>
             </>
           ) : null}
         </View>
@@ -221,7 +291,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     width: '100%',
     flexDirection: 'row',
-    flexWrap: 'wrap',
     alignItems: 'center',
   },
   previewImage: {
@@ -253,6 +322,10 @@ const styles = StyleSheet.create({
     height: '100%',
     borderTopLeftRadius: 35,
     borderTopRightRadius: 35,
+  },
+  removeImage: {
+    marginHorizontal: -30,
+    marginVertical: -50,
   },
 });
 

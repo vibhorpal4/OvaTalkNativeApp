@@ -28,7 +28,7 @@ const UpdateProfile = ({route, navigation}: any) => {
   const {username} = route.params;
   // const data = useSelector(state => state.profile);
   const profileData: any = useGetUserQuery(username);
-  const [updateUser, {isLoading, isSuccess, error, isError}]: any =
+  const [updateUser, {isLoading, isSuccess, error}]: any =
     useUpdateUserMutation();
   const [isModelOpen, setIsModelOpen] = useState<boolean>(false);
   const [profile, setProfile] = useState<editProfile>({
@@ -36,7 +36,9 @@ const UpdateProfile = ({route, navigation}: any) => {
     username: '',
     email: '',
     avatar: '',
+    bio: '',
   });
+  const [imagePreview, setImagePreview] = useState('');
 
   useEffect(() => {
     setProfile({
@@ -44,8 +46,9 @@ const UpdateProfile = ({route, navigation}: any) => {
       username: profileData.data?.user.username,
       email: profileData.data?.user.email,
       avatar: profileData.data?.user.avatar.url,
+      bio: profileData.data?.user.bio,
     });
-  }, [profileData.data]);
+  }, [profileData.isSuccess]);
 
   if (isSuccess) {
     navigation.navigate('Profile');
@@ -77,12 +80,13 @@ const UpdateProfile = ({route, navigation}: any) => {
       Alert.alert('Error', result.errorMessage);
     }
     setProfile({...profile, avatar: result.assets[0]});
+    setImagePreview(result.assets[0].uri);
   };
 
   const onGallery = async () => {
     const result: any = await launchImageLibrary({
       includeBase64: true,
-      mediaType: 'mixed',
+      mediaType: 'photo',
     });
     if (result.didCancel) {
       Alert.alert('Info', 'User close gallery without any selection');
@@ -91,6 +95,7 @@ const UpdateProfile = ({route, navigation}: any) => {
       Alert.alert('Error', result.errorMessage);
     }
     setProfile({...profile, avatar: result.assets[0]});
+    setImagePreview(result.assets[0].uri);
   };
 
   const handleSubmit = async () => {
@@ -108,9 +113,12 @@ const UpdateProfile = ({route, navigation}: any) => {
       profileData.data.user.email !== profile.email &&
         formData.append('email', profile.email);
     }
-
     {
-      profile.avatar &&
+      profileData.data.user.bio !== profile.bio &&
+        formData.append('bio', profile.bio);
+    }
+    {
+      imagePreview &&
         formData.append(
           'avatar',
           `data:${profile.avatar.type};base64,${profile.avatar.base64}`,
@@ -150,17 +158,13 @@ const UpdateProfile = ({route, navigation}: any) => {
                 <>
                   {profile.avatar?.uri ? (
                     <Image
-                      source={{
-                        uri: profile.avatar.uri,
-                      }}
+                      source={{uri: profile.avatar.uri}}
                       style={styles.profilePic}
                       resizeMode="cover"
                     />
                   ) : (
                     <Image
-                      source={{
-                        uri: profile.avatar,
-                      }}
+                      source={{uri: profileData.data.user.avatar.url}}
                       style={styles.profilePic}
                       resizeMode="cover"
                     />
@@ -187,37 +191,50 @@ const UpdateProfile = ({route, navigation}: any) => {
                 </Text>
               )}
             </View>
-            <View style={styles.form}>
-              <ScrollView>
-                <InputComponent
-                  placeHolder="username"
-                  onChangeText={(username: string) =>
-                    setProfile({...profile, username: username.toLowerCase()})
-                  }
-                  value={profile.username}
-                  helpText="username must be in lowercase"
-                />
-                <InputComponent
-                  placeHolder="Name"
-                  onChangeText={(name: string) =>
-                    setProfile({...profile, name})
-                  }
-                  value={profile.name}
-                />
-                <InputComponent
-                  placeHolder="Email"
-                  onChangeText={(email: string) =>
-                    setProfile({...profile, email: email.toLowerCase()})
-                  }
-                  value={profile.email}
-                  keyboardType="email-address"
-                />
-                <TouchableOpacity
-                  onPress={() => setIsModelOpen(true)}
-                  style={styles.changePassword}>
-                  <Text style={styles.changePasswordText}>Change Password</Text>
-                </TouchableOpacity>
-              </ScrollView>
+            <View style={styles.formWrapper}>
+              <View style={styles.form}>
+                <ScrollView>
+                  <InputComponent
+                    placeHolder="username"
+                    onChangeText={(username: string) =>
+                      setProfile({...profile, username: username.toLowerCase()})
+                    }
+                    value={profile.username}
+                    helpText="username must be in lowercase"
+                  />
+                  <InputComponent
+                    placeHolder="Name"
+                    onChangeText={(name: string) =>
+                      setProfile({...profile, name})
+                    }
+                    value={profile.name}
+                  />
+                  <InputComponent
+                    placeHolder="Email"
+                    onChangeText={(email: string) =>
+                      setProfile({...profile, email: email.toLowerCase()})
+                    }
+                    value={profile.email}
+                    keyboardType="email-address"
+                  />
+                  <InputComponent
+                    placeHolder="Bio"
+                    onChangeText={(bio: string) =>
+                      setProfile({...profile, bio})
+                    }
+                    value={profile.bio}
+                    numberOfLines={3}
+                    multiline
+                  />
+                  <TouchableOpacity
+                    onPress={() => setIsModelOpen(true)}
+                    style={styles.changePassword}>
+                    <Text style={styles.changePasswordText}>
+                      Change Password
+                    </Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
             </View>
           </View>
         </>
@@ -274,7 +291,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Bold',
     color: colors.primaryColor,
   },
-  form: {
+  formWrapper: {
     width: '100%',
     height: '100%',
     backgroundColor: 'white',
@@ -285,11 +302,16 @@ const styles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 80,
+    paddingVertical: 30,
+  },
+  form: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   changePassword: {
-    paddingHorizontal: 10,
-    paddingVertical: 20,
+    paddingHorizontal: 30,
+    paddingVertical: 10,
   },
   changePasswordText: {
     fontFamily: 'Poppins-Regular',

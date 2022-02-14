@@ -16,6 +16,8 @@ target 'Social' do
 
   pod 'RNSVG', :path => '../node_modules/react-native-svg'
 
+  pod 'react-native-restart', :path => '../node_modules/react-native-restart'
+
   target 'SocialTests' do
     inherit! :complete
     # Pods for testing

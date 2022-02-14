@@ -17,6 +17,7 @@ import {useLoginMutation} from '../redux/services/authService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {loginState} from '../redux/authSlice';
 import {useDispatch} from 'react-redux';
+import RNRestart from 'react-native-restart';
 
 const Login = ({navigation}: any) => {
   const [user, setUser] = useState<login>({
@@ -56,9 +57,7 @@ const Login = ({navigation}: any) => {
           placeHolder="Email"
           keyboardType="email-address"
           // value={user.email}
-          onChangeText={(email: string) =>
-            setUser({...user, email: email.toLowerCase()})
-          }
+          onChangeText={(email: string) => setUser({...user, email})}
         />
         <InputComponent
           placeHolder="********"

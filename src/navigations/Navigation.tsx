@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-
+import RNRestart from 'react-native-restart';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -19,7 +19,7 @@ import Register from '../Screens/Register';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {ActivityIndicator, Alert, Image, Text, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {logoutState} from '../redux/authSlice';
+import {loginState, logoutState} from '../redux/authSlice';
 import UpdateProfile from '../Screens/UpdateProfile';
 import ProfileImage from '../assets/images/Profile.svg';
 import {getProfile} from '../redux/profileSlice';
@@ -89,7 +89,7 @@ export const BottomStack = () => {
       email: data?.user.email,
       avatar: data?.user.avatar.url,
     });
-  }, [data]);
+  }, [isSuccess]);
 
   useEffect(() => {
     setErrors(error);
@@ -248,8 +248,23 @@ export const AuthStack = () => {
 const RootStack = () => {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  // const [token, setToken] = useState<any>(null);
+  const [user, setUser] = useState<any>({});
   const {token} = useSelector((state: any) => state.auth);
+  const dispatch = useDispatch();
+
+  const getUser = async () => {
+    try {
+      const user = await AsyncStorage.getItem('@user');
+      setUser(user);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getUser();
+    dispatch(loginState(user));
+  }, []);
 
   const getToken = async () => {
     try {
