@@ -1,5 +1,5 @@
 import React from 'react';
-import {StyleSheet, Text, TextInput} from 'react-native';
+import {StyleSheet, Text, TextInput, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import colors from '../../assets/colors/colors';
 
@@ -11,19 +11,24 @@ const InputComponent = ({
   secureTextEntry,
   value,
   label,
+  helpText,
 }: any) => {
   return (
-    <SafeAreaView style={styles.wrapper}>
+    <SafeAreaView>
       {label && <Text style={styles.label}>{label} :</Text>}
-      <TextInput
-        style={styles.input}
-        autoComplete={autoComplete}
-        keyboardType={keyboardType}
-        onChangeText={onChangeText}
-        placeholder={placeHolder}
-        secureTextEntry={false || secureTextEntry}
-        value={value}
-      />
+      <View style={styles.wrapper}>
+        <TextInput
+          style={styles.input}
+          autoComplete={autoComplete}
+          keyboardType={keyboardType}
+          onChangeText={onChangeText}
+          placeholder={placeHolder}
+          secureTextEntry={false || secureTextEntry}
+          value={value}
+          placeholderTextColor={colors.textLight}
+        />
+      </View>
+      {helpText && <Text style={styles.helpText}>*{helpText}</Text>}
     </SafeAreaView>
   );
 };
@@ -38,7 +43,7 @@ const styles = StyleSheet.create({
   },
   input: {
     minWidth: '70%',
-    backgroundColor: colors.backgroundColor,
+    // backgroundColor: colors.backgroundColor,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -51,6 +56,16 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: 'Poppins-Regular',
     color: colors.textDark,
+    paddingHorizontal: 10,
+    marginBottom: -20,
+    marginTop: 20,
+    fontSize: 18,
+  },
+  helpText: {
+    color: colors.textLight,
+    fontFamily: 'Poppins-Light',
+    paddingHorizontal: 10,
+    marginTop: -15,
   },
 });
 

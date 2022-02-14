@@ -15,27 +15,21 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import colors from '../assets/colors/colors';
 import {uploadPost} from '../interfaces/interfaces';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useGetMyProfileQuery} from '../redux/services/profileService';
 import {useUploadPostMutation} from '../redux/services/postService';
-import {androidCameraPermission} from '../permissions';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 
-const UploadPost: React.FC<any> = ({navigation}) => {
+const UploadPost = ({navigation}: any) => {
   const [post, setPost] = useState<uploadPost>({
-    caption: null,
-    images: null,
+    caption: '',
+    images: '',
   });
-  const [uploadPost, {data, isLoading, error, isSuccess}]: any =
+  const [uploadPost, {isLoading, error, isSuccess}]: any =
     useUploadPostMutation();
 
   if (isSuccess) {
     navigation.navigate('HomeStack', {
       screen: 'Home',
     });
-  }
-
-  if (error) {
-    console.log(error);
   }
 
   const selectImage = async () => {
@@ -69,7 +63,6 @@ const UploadPost: React.FC<any> = ({navigation}) => {
       mediaType: 'mixed',
       selectionLimit: 0,
     });
-    console.log(result.assets);
     setPost({...post, images: result.assets});
   };
 
@@ -88,7 +81,6 @@ const UploadPost: React.FC<any> = ({navigation}) => {
       mediaType: 'mixed',
       selectionLimit: 0,
     });
-    console.log(result.assets);
     setPost({...post, images: result.assets?.concat(result.assets)});
   };
 
@@ -103,7 +95,7 @@ const UploadPost: React.FC<any> = ({navigation}) => {
     await uploadPost(formData);
     setPost({
       caption: '',
-      images: null,
+      images: '',
     });
   };
 
@@ -111,7 +103,8 @@ const UploadPost: React.FC<any> = ({navigation}) => {
     <View style={styles.container}>
       <SafeAreaView style={{paddingVertical: 5}}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('HomeStack', {screen: 'Home'})}>
             <MaterialCommunityIcons
               name="close"
               size={25}
@@ -141,18 +134,18 @@ const UploadPost: React.FC<any> = ({navigation}) => {
             justifyContent: 'center',
             alignItems: 'center',
           }}>
-          {/* {error && <Text style={{color: 'red'}}>{error.data.message} </Text>} */}
+          {error && <Text>{error.data.message}</Text>}
         </View>
-
         <TextInput
           style={styles.caption}
           placeholder="Caption"
           multiline
           numberOfLines={6}
+          placeholderTextColor={colors.textLight}
           onChangeText={(caption: string) => setPost({...post, caption})}
         />
         <View style={styles.preview}>
-          {post?.images && (
+          {post?.images ? (
             <>
               {post.images.map((img: any) => (
                 <Image
@@ -165,7 +158,7 @@ const UploadPost: React.FC<any> = ({navigation}) => {
                 <MaterialCommunityIcons name="plus" size={50} />
               </TouchableOpacity>
             </>
-          )}
+          ) : null}
         </View>
       </View>
       <View style={styles.bottom}>
@@ -217,11 +210,11 @@ const styles = StyleSheet.create({
   caption: {
     fontFamily: 'Poppins-Regular',
     color: colors.textDark,
-    fontSize: 15,
+    fontSize: 20,
     display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'flex-end',
-    // height: '50%',
+    paddingHorizontal: 20,
   },
   preview: {
     display: 'flex',

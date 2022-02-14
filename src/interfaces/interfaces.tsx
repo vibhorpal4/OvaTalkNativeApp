@@ -10,13 +10,13 @@ export interface register {
 }
 
 export interface uploadPost {
-  caption: string | null;
+  caption: string;
   images: any;
 }
 
 export interface editProfile {
-  name: string | null;
-  username: string | null;
-  email: string | null;
+  name: string;
+  username: string;
+  email: string;
   avatar: any;
 }

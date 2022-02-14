@@ -6244,6 +6244,13 @@ scheduler@^0.20.2:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
 
+scrcpy@^1.1.6:
+  version "1.1.6"
+  resolved "https://registry.yarnpkg.com/scrcpy/-/scrcpy-1.1.6.tgz#e5a2f81ada90fe2a5310152a31a12d3a0d1a9480"
+  integrity sha512-7bNdszkt80btmWXnpl0SuTXjIveaU+OP0wVbVT0AYD8Zf13QBqiBb13l9pEs+FwsmDAzWcINKQKsWPfDcAePVQ==
+  dependencies:
+    user "0.0.0"
+
 "semver@2 || 3 || 4 || 5", semver@^5.5.0, semver@^5.6.0:
   version "5.7.1"
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.7.1.tgz#a954f931aeba508d307bbf069eff0c01c96116f7"
@@ -7029,6 +7036,11 @@ use@^3.1.0:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/use/-/use-3.1.1.tgz#d50c8cac79a19fbc20f2911f56eb973f4e10070f"
   integrity sha512-cwESVXlO3url9YWlFW/TA9cshCEhtu7IKJ/p5soJ/gGpj7vbvFrAY/eIioQ6Dw23KjZhYgiIo8HOs1nQ2vr/oQ==
+
+user@0.0.0:
+  version "0.0.0"
+  resolved "https://registry.yarnpkg.com/user/-/user-0.0.0.tgz#f27f1b23fc511f2a8efa40db55cfba123824e02a"
+  integrity sha1-8n8bI/xRHyqO+kDbVc+6Ejgk4Co=
 
 util-deprecate@~1.0.1:
   version "1.0.2"

@@ -18,7 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {loginState} from '../redux/authSlice';
 import {useDispatch} from 'react-redux';
 
-const Login: React.FC<login> = ({navigation}: any) => {
+const Login = ({navigation}: any) => {
   const [user, setUser] = useState<login>({
     email: '',
     password: '',
@@ -51,15 +51,17 @@ const Login: React.FC<login> = ({navigation}: any) => {
     <View style={styles.container}>
       <LoginImage width="80%" height="50%" />
       <View style={styles.form}>
-        {error && <Text>{error.data.message}</Text>}
+        {error && <Text style={{color: 'red'}}>{error.data.message}</Text>}
         <InputComponent
           placeHolder="Email"
           keyboardType="email-address"
           // value={user.email}
-          onChangeText={(email: string) => setUser({...user, email})}
+          onChangeText={(email: string) =>
+            setUser({...user, email: email.toLowerCase()})
+          }
         />
         <InputComponent
-          placeHolder="*******"
+          placeHolder="********"
           // value={user.password}
           onChangeText={(password: string) => setUser({...user, password})}
           secureTextEntry
@@ -110,6 +112,7 @@ const styles = StyleSheet.create({
   },
   registerText: {
     fontFamily: 'Poppins-Regular',
+    color: colors.textDark,
   },
 });
 

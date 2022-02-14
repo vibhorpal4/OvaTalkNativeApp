@@ -1,7 +1,7 @@
 import React from 'react';
 import {Text, View} from 'react-native';
 
-const Post: React.FC<any> = () => {
+const Post = () => {
   return (
     <View>
       <Text>PostScreen</Text>

@@ -1,6 +1,4 @@
 import {createSlice} from '@reduxjs/toolkit';
-import {useDispatch} from 'react-redux';
-import {useLogoutQuery} from './services/authService';
 
 interface auth {
   token: string | null;

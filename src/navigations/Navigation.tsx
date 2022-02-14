@@ -19,10 +19,11 @@ import Register from '../Screens/Register';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {ActivityIndicator, Alert, Image, Text, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {useGetMyProfileQuery} from '../redux/services/profileService';
 import {logoutState} from '../redux/authSlice';
 import UpdateProfile from '../Screens/UpdateProfile';
 import ProfileImage from '../assets/images/Profile.svg';
+import {getProfile} from '../redux/profileSlice';
+import {useGetMyProfileQuery} from '../redux/services/userService';
 
 const Bottom_Stack = createBottomTabNavigator();
 const Home_Stack = createNativeStackNavigator();
@@ -55,17 +56,71 @@ export const SearchStack = () => {
 };
 
 export const ProfileStack = () => {
+  const profile = useSelector((state: any) => state.profile);
   return (
     <Profile_Stack.Navigator
       screenOptions={{headerShown: false}}
       initialRouteName="Profile">
-      <Profile_Stack.Screen name="Profile" component={Profile} />
+      <Profile_Stack.Screen
+        name="Profile"
+        component={Profile}
+        initialParams={{username: profile?.user?.username}}
+      />
       <Profile_Stack.Screen name="UpdateProfile" component={UpdateProfile} />
     </Profile_Stack.Navigator>
   );
 };
 
-export const BottomStack = ({profile}: any) => {
+export const BottomStack = () => {
+  const [errors, setErrors] = useState<any>(null);
+  const [profile, setProfile] = useState({
+    name: '',
+    username: '',
+    email: '',
+    avatar: '',
+  });
+  const {isLoading, error, data, isSuccess} = useGetMyProfileQuery(undefined);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    setProfile({
+      name: data?.user.name,
+      username: data?.user.username,
+      email: data?.user.email,
+      avatar: data?.user.avatar.url,
+    });
+  }, [data]);
+
+  useEffect(() => {
+    setErrors(error);
+  }, [error]);
+
+  if (isSuccess) {
+    dispatch(getProfile(data));
+  }
+
+  const clearToken = async () => {
+    try {
+      await AsyncStorage.clear();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  if (errors) {
+    if (errors.error) {
+      Alert.alert('Error', errors.error);
+      setErrors(null);
+    } else {
+      Alert.alert('Error', errors.data.message);
+      if (errors.status === 401) {
+        clearToken();
+        dispatch(logoutState());
+      }
+      setErrors(null);
+    }
+  }
+
   return (
     <Bottom_Stack.Navigator
       screenOptions={{
@@ -135,21 +190,16 @@ export const BottomStack = ({profile}: any) => {
           tabBarIcon: ({focused, color}) => {
             return (
               <>
-                {profile === undefined || null ? (
+                {isLoading ? (
                   <ActivityIndicator />
                 ) : (
                   <>
-                    {profile?.user.avatar.url === '' ? (
-                      // <MaterialCommunityIcons
-                      //   name="account-circle"
-                      //   color={focused ? colors.primaryColor : color}
-                      //   size={25}
-                      // />
+                    {profile.avatar === '' ? (
                       <View
                         style={{
                           backgroundColor: colors.backgroundColor,
                           borderColor: focused
-                            ? colors.primaryColor
+                            ? colors.primaryColor.toString()
                             : colors.backgroundColor,
                           borderWidth: 2,
                           borderRadius: 50,
@@ -158,17 +208,20 @@ export const BottomStack = ({profile}: any) => {
                         <ProfileImage height={25} width={25} />
                       </View>
                     ) : (
-                      <>
-                        <Image
-                          source={{uri: profile?.user.avatar.url}}
-                          width={25}
-                          height={25}
-                          // style={{
-                          //   borderRadius: 50,
-                          //   borderColor: focused ? colors.primaryColor : null,
-                          // }}
-                        />
-                      </>
+                      <Image
+                        source={{uri: profile.avatar}}
+                        style={{
+                          borderColor: focused
+                            ? colors.primaryColor
+                            : colors.backgroundColor,
+                          borderWidth: 2,
+                          borderRadius: 50,
+                          padding: 2,
+                          width: 25,
+                          height: 25,
+                        }}
+                        resizeMode="cover"
+                      />
                     )}
                   </>
                 )}
@@ -194,12 +247,9 @@ export const AuthStack = () => {
 
 const RootStack = () => {
   const [authToken, setAuthToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState<string | null>(null);
-  const [errors, setErrors] = useState<string | null>(null);
-  const tokn = useSelector(state => state.auth.token);
-  const {isLoading, error, data} = useGetMyProfileQuery();
-  const dispatch = useDispatch();
+  const [loading, setLoading] = useState<boolean>(true);
+  // const [token, setToken] = useState<any>(null);
+  const {token} = useSelector((state: any) => state.auth);
 
   const getToken = async () => {
     try {
@@ -218,46 +268,14 @@ const RootStack = () => {
 
   useEffect(() => {
     getToken();
-    setToken(tokn);
-  }, [tokn]);
+  }, [token]);
 
-  useEffect(() => {
-    setErrors(error);
-  }, [error]);
-
-  const clearToken = async () => {
-    try {
-      await AsyncStorage.clear();
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  if (errors) {
-    if (errors.error) {
-      Alert.alert('Error', errors.error);
-      setErrors(null);
-    } else {
-      Alert.alert('Error', errors.data.message);
-      if (errors.status === 401) {
-        clearToken();
-        dispatch(logoutState());
-      }
-      setErrors(null);
-    }
-  }
   return (
     <>
-      {isLoading || loading ? (
+      {loading ? (
         <ActivityIndicator />
       ) : (
-        <>
-          {authToken || token ? (
-            <BottomStack profile={data ? data : null} />
-          ) : (
-            <AuthStack />
-          )}
-        </>
+        <>{authToken ? <BottomStack /> : <AuthStack />}</>
       )}
     </>
   );

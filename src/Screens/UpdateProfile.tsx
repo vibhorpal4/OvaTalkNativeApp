@@ -18,17 +18,43 @@ import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {editProfile} from '../interfaces/interfaces';
 import InputComponent from '../Components/HOC/InputComponent';
 import PasswordChangeModel from '../Components/PasswordChangeModel';
+import {
+  useGetUserQuery,
+  useUpdateUserMutation,
+} from '../redux/services/userService';
+import {useSelector} from 'react-redux';
 
-const UpdateProfile: React.FC<any> = ({navigation}) => {
-  const [profile, setProfile] = useState<editProfile>({
-    name: null,
-    username: null,
-    email: null,
-    avatar: null,
-  });
+const UpdateProfile = ({route, navigation}: any) => {
+  const {username} = route.params;
+  // const data = useSelector(state => state.profile);
+  const profileData: any = useGetUserQuery(username);
+  const [updateUser, {isLoading, isSuccess, error, isError}]: any =
+    useUpdateUserMutation();
   const [isModelOpen, setIsModelOpen] = useState<boolean>(false);
+  const [profile, setProfile] = useState<editProfile>({
+    name: '',
+    username: '',
+    email: '',
+    avatar: '',
+  });
 
-  const {data, isLoading} = useGetMyProfileQuery();
+  useEffect(() => {
+    setProfile({
+      name: profileData.data?.user.name,
+      username: profileData.data?.user.username,
+      email: profileData.data?.user.email,
+      avatar: profileData.data?.user.avatar.url,
+    });
+  }, [profileData.data]);
+
+  if (isSuccess) {
+    navigation.navigate('Profile');
+  }
+  if (error) {
+    if (error.error) {
+      Alert.alert('Error', error.error);
+    }
+  }
 
   const selectImage = async () => {
     Alert.alert('Profile Photo', 'Choose an option', [
@@ -44,6 +70,12 @@ const UpdateProfile: React.FC<any> = ({navigation}) => {
       mediaType: 'photo',
       saveToPhotos: true,
     });
+    if (result.didCancel) {
+      Alert.alert('Info', 'User close camera without any selection');
+    }
+    if (result.errorMessage) {
+      Alert.alert('Error', result.errorMessage);
+    }
     setProfile({...profile, avatar: result.assets[0]});
   };
 
@@ -52,26 +84,46 @@ const UpdateProfile: React.FC<any> = ({navigation}) => {
       includeBase64: true,
       mediaType: 'mixed',
     });
+    if (result.didCancel) {
+      Alert.alert('Info', 'User close gallery without any selection');
+    }
+    if (result.errorMessage) {
+      Alert.alert('Error', result.errorMessage);
+    }
     setProfile({...profile, avatar: result.assets[0]});
   };
 
   const handleSubmit = async () => {
     const formData = new FormData();
 
-    formData.append('name', profile.name),
-      formData.append('username', profile.username),
-      formData.append('email', profile.email),
-      formData.append(
-        'avatar',
-        `data:${profile.avatar.type};base64,${profile.avatar.base64}`,
-      );
+    {
+      profileData.data.user.name !== profile.name &&
+        formData.append('name', profile.name);
+    }
+    {
+      profileData.data.user.username !== profile.username &&
+        formData.append('username', profile.username);
+    }
+    {
+      profileData.data.user.email !== profile.email &&
+        formData.append('email', profile.email);
+    }
 
-    console.log(formData);
+    {
+      profile.avatar &&
+        formData.append(
+          'avatar',
+          `data:${profile.avatar.type};base64,${profile.avatar.base64}`,
+        );
+    }
+    const username = profileData.data.user.username;
+    const user = formData;
+    await updateUser({user, username});
   };
 
   return (
     <View style={styles.container}>
-      {isLoading ? (
+      {profileData.isLoading ? (
         <ActivityIndicator />
       ) : (
         <>
@@ -85,24 +137,40 @@ const UpdateProfile: React.FC<any> = ({navigation}) => {
             </TouchableOpacity>
             <Text style={styles.title}>Edit Profile</Text>
             <TouchableOpacity onPress={handleSubmit}>
-              <Text style={styles.done}>Done</Text>
+              {isLoading ? (
+                <ActivityIndicator />
+              ) : (
+                <Text style={styles.done}>Done</Text>
+              )}
             </TouchableOpacity>
           </SafeAreaView>
           <View style={styles.main}>
             <View style={styles.profileContainer}>
-              {data.user.avatar.url || profile.avatar === null ? (
+              {profile.avatar ? (
+                <>
+                  {profile.avatar?.uri ? (
+                    <Image
+                      source={{
+                        uri: profile.avatar.uri,
+                      }}
+                      style={styles.profilePic}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Image
+                      source={{
+                        uri: profile.avatar,
+                      }}
+                      style={styles.profilePic}
+                      resizeMode="cover"
+                    />
+                  )}
+                </>
+              ) : (
                 <ProfileImage
                   height={150}
                   width={150}
                   color={colors.textLight}
-                />
-              ) : (
-                <Image
-                  source={{
-                    uri: profile.avatar.uri,
-                  }}
-                  style={styles.profilePic}
-                  resizeMode="cover"
                 />
               )}
               <TouchableOpacity
@@ -110,15 +178,24 @@ const UpdateProfile: React.FC<any> = ({navigation}) => {
                 onPress={selectImage}>
                 <Text style={styles.changePhotoText}>Change profile photo</Text>
               </TouchableOpacity>
+              {error?.data && (
+                <Text style={styles.error}>{error.data.message}</Text>
+              )}
+              {profileData.error?.data && (
+                <Text style={styles.error}>
+                  {profileData.error.data.message}
+                </Text>
+              )}
             </View>
             <View style={styles.form}>
               <ScrollView>
                 <InputComponent
                   placeHolder="username"
                   onChangeText={(username: string) =>
-                    setProfile({...profile, username})
+                    setProfile({...profile, username: username.toLowerCase()})
                   }
                   value={profile.username}
+                  helpText="username must be in lowercase"
                 />
                 <InputComponent
                   placeHolder="Name"
@@ -130,7 +207,7 @@ const UpdateProfile: React.FC<any> = ({navigation}) => {
                 <InputComponent
                   placeHolder="Email"
                   onChangeText={(email: string) =>
-                    setProfile({...profile, email})
+                    setProfile({...profile, email: email.toLowerCase()})
                   }
                   value={profile.email}
                   keyboardType="email-address"
@@ -218,6 +295,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular',
     fontSize: 15,
     color: colors.textDark,
+  },
+  error: {
+    fontFamily: 'Poppins-Regular',
+    color: 'red',
+    fontSize: 15,
   },
 });
 

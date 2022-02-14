@@ -1,7 +1,7 @@
 import React from 'react';
 import {Text, View} from 'react-native';
 
-const Notification: React.FC<any> = () => {
+const Notification = () => {
   return (
     <View>
       <Text>NotificationScreen</Text>

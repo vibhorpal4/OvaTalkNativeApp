@@ -1,7 +1,7 @@
 import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/dist/query/react';
 
 const baseUrl = `https://ovatalk.herokuapp.com`;
-// const baseUrl = `http://172.20.10.7:5000`;
+// const baseUrl = `http://192.168.43.88:5000`;
 
 export const authApi = createApi({
   reducerPath: 'authApi',

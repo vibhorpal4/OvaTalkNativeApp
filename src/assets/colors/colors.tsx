@@ -9,12 +9,12 @@ interface color {
 }
 
 const colors: color = {
-  primaryColor: '#FF005C',
+  primaryColor: '#ff005c',
   // secondaryColor: '#225170',
-  secondaryColor: '#1068A3',
-  backgroundColor: '#EFF3F5 ',
-  textDark: '#1D1D28',
-  textLight: '#A4A4B2',
+  secondaryColor: '#1068a3',
+  backgroundColor: '#eff3f5 ',
+  textDark: '#1d1d28',
+  textLight: '#a4a4b2',
   shadowColor: '#ffff',
 };
 

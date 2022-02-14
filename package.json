@@ -6,7 +6,6 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "test": "jest",
     "lint": "eslint .",
     "debug": "open 'rndebugger://set-debugger-loc?host=localhost&port=19001'"
   },
@@ -23,7 +22,8 @@
     "react-native-screens": "^3.10.2",
     "react-native-svg": "^12.1.1",
     "react-native-vector-icons": "^9.0.0",
-    "react-redux": "^7.2.6"
+    "react-redux": "^7.2.6",
+    "scrcpy": "^1.1.6"
   },
   "devDependencies": {
     "@babel/core": "7.16.12",

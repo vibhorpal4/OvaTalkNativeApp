@@ -1,5 +1,11 @@
 import React, {useState} from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import colors from '../assets/colors/colors';
 import RegisterImage from '../assets/images/Register.svg';
 import ButtonComponent from '../Components/HOC/ButtonComponent';
@@ -11,7 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useRegisterMutation} from '../redux/services/authService';
 import {loginState} from '../redux/authSlice';
 
-const Register: React.FC<any> = ({navigation}) => {
+const Register = ({navigation}: any) => {
   const [user, setUser] = useState<register>({
     username: '',
     email: '',
@@ -45,16 +51,21 @@ const Register: React.FC<any> = ({navigation}) => {
       <RegisterImage width="80%" height="50%" />
       <View style={styles.form}>
         <InputComponent
-          placeHolder="Username"
-          onChangeText={(username: string) => setUser({...user, username})}
+          placeHolder="username"
+          onChangeText={(username: string) =>
+            setUser({...user, username: username.toLowerCase()})
+          }
+          helpText="username must be in lowercase"
         />
         <InputComponent
           placeHolder="Email"
           keyboardType="email-address"
-          onChangeText={(email: string) => setUser({...user, email})}
+          onChangeText={(email: string) =>
+            setUser({...user, email: email.toLowerCase()})
+          }
         />
         <InputComponent
-          placeHolder="*******"
+          placeHolder="Password"
           secureTextEntry
           onChangeText={(password: string) => setUser({...user, password})}
         />
@@ -64,11 +75,17 @@ const Register: React.FC<any> = ({navigation}) => {
             <Text style={styles.loginText}>Login</Text>
           </TouchableOpacity>
         </View>
-        <ButtonComponent
-          onPress={handleSubmit}
-          title="Register"
-          icon={<MaterialCommunityIcons name="login" size={13} color="white" />}
-        />
+        {isLoading ? (
+          <ActivityIndicator />
+        ) : (
+          <ButtonComponent
+            onPress={handleSubmit}
+            title="Register"
+            icon={
+              <MaterialCommunityIcons name="login" size={13} color="white" />
+            }
+          />
+        )}
       </View>
     </View>
   );
@@ -98,6 +115,7 @@ const styles = StyleSheet.create({
   },
   loginText: {
     fontFamily: 'Poppins-Regular',
+    color: colors.textDark,
   },
 });
 

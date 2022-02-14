@@ -1,7 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/dist/query/react';
 
 const baseUrl = `https://ovatalk.herokuapp.com`;
+// const baseUrl = `http://192.168.43.88:5000`;
 
 export const userApi = createApi({
   reducerPath: 'userApi',
@@ -24,12 +25,17 @@ export const userApi = createApi({
   }),
   tagTypes: ['Users'],
   endpoints: builder => ({
+    getMyProfile: builder.query({
+      query: () => '/api/v1/users/profile',
+      providesTags: ['Users'],
+    }),
     updateUser: builder.mutation({
       query: ({user, username}) => ({
         url: `/api/v1/users/user/${username}`,
         method: 'PUT',
         body: user,
       }),
+      invalidatesTags: ['Users'],
     }),
     getUser: builder.query({
       query: username => `/api/v1/users/user/${username}`,
@@ -38,4 +44,5 @@ export const userApi = createApi({
   }),
 });
 
-export const {useUpdateUserMutation} = userApi;
+export const {useUpdateUserMutation, useGetUserQuery, useGetMyProfileQuery} =
+  userApi;
