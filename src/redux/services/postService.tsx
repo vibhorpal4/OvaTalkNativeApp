@@ -41,12 +41,7 @@ export const postApi = createApi({
       query: () => `/api/v1/posts`,
       providesTags: ['Posts'],
     }),
-    getMyPosts: builder.query({
-      query: () => '/api/v1/posts/my/posts',
-      providesTags: ['Posts'],
-    }),
   }),
 });
 
-export const {useUploadPostMutation, useGetPostQuery, useGetMyPostsQuery} =
-  postApi;
+export const {useUploadPostMutation, useGetPostQuery} = postApi;

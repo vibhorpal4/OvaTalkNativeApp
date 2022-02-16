@@ -71,17 +71,14 @@ const Login = ({navigation}: any) => {
             <Text style={styles.registerText}>Register</Text>
           </TouchableOpacity>
         </View>
-        {isLoading ? (
-          <ActivityIndicator />
-        ) : (
-          <ButtonComponent
-            title="Login"
-            onPress={handleSubmit}
-            icon={
-              <MaterialCommunityIcons name="login" size={13} color="white" />
-            }
-          />
-        )}
+
+        <ButtonComponent
+          title="Login"
+          onPress={handleSubmit}
+          icon={<MaterialCommunityIcons name="login" size={13} color="white" />}
+          primary
+          isLoading={isLoading}
+        />
       </View>
     </View>
   );

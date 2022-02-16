@@ -23,7 +23,7 @@ export const userApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Users'],
+  tagTypes: ['Users', 'Followers', 'Followings'],
   endpoints: builder => ({
     getMyProfile: builder.query({
       query: () => '/api/v1/users/profile',
@@ -41,8 +41,37 @@ export const userApi = createApi({
       query: username => `/api/v1/users/user/${username}`,
       providesTags: ['Users'],
     }),
+    getUserFollowers: builder.query({
+      query: username => `/api/v1/users/user/${username}/followers`,
+      providesTags: ['Followers', 'Followings', 'Users'],
+    }),
+    getUserFollowings: builder.query({
+      query: username => `/api/v1/users/user/${username}/followings`,
+      providesTags: ['Followings', 'Followers', 'Users'],
+    }),
+    followUser: builder.mutation({
+      query: username => ({
+        url: `/api/v1/users/user/${username}/follow`,
+        method: 'PUT',
+      }),
+      invalidatesTags: ['Followers', 'Followings', 'Users'],
+    }),
+    unFollowUser: builder.mutation({
+      query: username => ({
+        url: `/api/v1/users/user/${username}/unfollow`,
+        method: 'PUT',
+      }),
+      invalidatesTags: ['Followers', 'Followings', 'Users'],
+    }),
   }),
 });
 
-export const {useUpdateUserMutation, useGetUserQuery, useGetMyProfileQuery} =
-  userApi;
+export const {
+  useUpdateUserMutation,
+  useGetUserQuery,
+  useGetMyProfileQuery,
+  useGetUserFollowersQuery,
+  useGetUserFollowingsQuery,
+  useFollowUserMutation,
+  useUnFollowUserMutation,
+} = userApi;

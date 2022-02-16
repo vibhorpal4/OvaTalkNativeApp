@@ -41,13 +41,17 @@ const UpdateProfile = ({route, navigation}: any) => {
   const [imagePreview, setImagePreview] = useState('');
 
   useEffect(() => {
-    setProfile({
-      name: profileData.data?.user.name,
-      username: profileData.data?.user.username,
-      email: profileData.data?.user.email,
-      avatar: profileData.data?.user.avatar.url,
-      bio: profileData.data?.user.bio,
-    });
+    if (profileData.isLoading) {
+      <ActivityIndicator />;
+    } else {
+      setProfile({
+        name: profileData.data.user.name,
+        username: profileData.data.user.username,
+        email: profileData.data.user.email,
+        avatar: profileData.data.user.avatar.url,
+        bio: profileData.data.user.bio,
+      });
+    }
   }, [profileData.isSuccess]);
 
   if (isSuccess) {

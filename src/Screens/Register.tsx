@@ -75,17 +75,14 @@ const Register = ({navigation}: any) => {
             <Text style={styles.loginText}>Login</Text>
           </TouchableOpacity>
         </View>
-        {isLoading ? (
-          <ActivityIndicator />
-        ) : (
-          <ButtonComponent
-            onPress={handleSubmit}
-            title="Register"
-            icon={
-              <MaterialCommunityIcons name="login" size={13} color="white" />
-            }
-          />
-        )}
+
+        <ButtonComponent
+          onPress={handleSubmit}
+          title="Register"
+          icon={<MaterialCommunityIcons name="login" size={13} color="white" />}
+          primary
+          isLoading={isLoading}
+        />
       </View>
     </View>
   );

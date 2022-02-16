@@ -1,10 +1,10 @@
 import React from 'react';
-import {Image, StyleSheet, Text, View} from 'react-native';
+import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
 import colors from '../assets/colors/colors';
 import ProfileImage from '../assets/images/Profile.svg';
 
-const ProfileCard = ({user}: any) => {
-  const {avatar, name, posts, followers, followings, bio} = user;
+const ProfileCard = ({user, toFollowers, toFollowings}: any) => {
+  const {username, avatar, name, posts, followers, followings, bio} = user;
   return (
     <View style={styles.wrapper}>
       <View style={styles.profilePicWrapper}>
@@ -19,12 +19,20 @@ const ProfileCard = ({user}: any) => {
             <Text style={styles.profileDetailsTextLabel}>Posts</Text>
           </View>
           <View style={styles.profileDetails}>
-            <Text style={styles.profileDetailsText}>{followers.length}</Text>
-            <Text style={styles.profileDetailsTextLabel}>Followers</Text>
+            <Pressable
+              onPress={toFollowers}
+              style={styles.profileDetailsContainer}>
+              <Text style={styles.profileDetailsText}>{followers.length}</Text>
+              <Text style={styles.profileDetailsTextLabel}>Followers</Text>
+            </Pressable>
           </View>
           <View style={styles.profileDetails}>
-            <Text style={styles.profileDetailsText}>{followings.length}</Text>
-            <Text style={styles.profileDetailsTextLabel}>Followings</Text>
+            <Pressable
+              style={styles.profileDetailsContainer}
+              onPress={toFollowings}>
+              <Text style={styles.profileDetailsText}>{followings.length}</Text>
+              <Text style={styles.profileDetailsTextLabel}>Followings</Text>
+            </Pressable>
           </View>
         </View>
       </View>
@@ -69,6 +77,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 8,
+  },
+  profileDetailsContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   profileDetailsText: {
     fontFamily: 'Poppins-Regular',

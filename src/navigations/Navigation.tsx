@@ -24,12 +24,15 @@ import UpdateProfile from '../Screens/UpdateProfile';
 import ProfileImage from '../assets/images/Profile.svg';
 import {getProfile} from '../redux/profileSlice';
 import {useGetMyProfileQuery} from '../redux/services/userService';
+import Followers from '../Screens/Followers';
+import Followings from '../Screens/Followings';
 
 const Bottom_Stack = createBottomTabNavigator();
 const Home_Stack = createNativeStackNavigator();
 const Search_Stack = createNativeStackNavigator();
 const Auth_Stack = createNativeStackNavigator();
 const Profile_Stack = createNativeStackNavigator();
+const User_Stack = createNativeStackNavigator();
 
 export const HomeStack = () => {
   return (
@@ -43,13 +46,26 @@ export const HomeStack = () => {
   );
 };
 
+export const UserStack = () => {
+  return (
+    <User_Stack.Navigator
+      screenOptions={{headerShown: false}}
+      initialRouteName="User">
+      <User_Stack.Screen name="User" component={User} />
+      <User_Stack.Screen name="Followers" component={Followers} />
+      <User_Stack.Screen name="Followings" component={Followings} />
+      <User_Stack.Screen name="Post" component={Post} />
+    </User_Stack.Navigator>
+  );
+};
+
 export const SearchStack = () => {
   return (
     <Search_Stack.Navigator
       screenOptions={{headerShown: false}}
       initialRouteName="Search">
       <Search_Stack.Screen name="Search" component={Search} />
-      <Search_Stack.Screen name="User" component={User} />
+      <Search_Stack.Screen name="User" component={UserStack} />
       <Search_Stack.Screen name="Post" component={Post} />
     </Search_Stack.Navigator>
   );
@@ -67,6 +83,9 @@ export const ProfileStack = () => {
         initialParams={{username: profile?.user?.username}}
       />
       <Profile_Stack.Screen name="UpdateProfile" component={UpdateProfile} />
+      <Profile_Stack.Screen name="Followers" component={Followers} />
+      <Profile_Stack.Screen name="Followings" component={Followings} />
+      <Profile_Stack.Screen name="UserStack" component={UserStack} />
     </Profile_Stack.Navigator>
   );
 };
