@@ -5,27 +5,50 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import RNRestart from 'react-native-restart';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import Home from '../Screens/Home';
 import Search from '../Screens/Search';
 import User from '../Screens/User';
-import Post from '../Screens/Post';
+import Comments from '../Screens/Comments';
 import Profile from '../Screens/Profile';
 import colors from '../assets/colors/colors';
 import UploadPost from '../Screens/UploadPost';
 import Notification from '../Screens/Notification';
 import Login from '../Screens/Login';
 import Register from '../Screens/Register';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {ActivityIndicator, Alert, Image, Text, View} from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Pressable,
+  ToastAndroid,
+  View,
+} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {loginState, logoutState} from '../redux/authSlice';
+import {logoutState} from '../redux/authSlice';
 import UpdateProfile from '../Screens/UpdateProfile';
 import ProfileImage from '../assets/images/Profile.svg';
-import {getProfile} from '../redux/profileSlice';
-import {useGetMyProfileQuery} from '../redux/services/userService';
+import {
+  useGetMyProfileQuery,
+  useGetUserNotificationsQuery,
+  useGetUserQuery,
+} from '../redux/services/userService';
 import Followers from '../Screens/Followers';
 import Followings from '../Screens/Followings';
+import Posts from '../Screens/Posts';
+import Explore from '../Screens/Explore';
+import SearchResult from '../Screens/SearchResult';
+import NetInfo from '@react-native-community/netinfo';
+import Modal from 'react-native-modal';
+import ButtonComponent from '../Components/HOC/ButtonComponent';
+import {io} from 'socket.io-client';
+import socket from '../../socketClient';
+import {setIsRead} from '../redux/notificationSlice';
+import EditPost from '../Screens/EditPost';
+import Messages from '../Screens/Messages';
+import SavedPosts from '../Screens/SavedPosts';
+import Chats from '../Screens/Chats';
 
 const Bottom_Stack = createBottomTabNavigator();
 const Home_Stack = createNativeStackNavigator();
@@ -33,6 +56,9 @@ const Search_Stack = createNativeStackNavigator();
 const Auth_Stack = createNativeStackNavigator();
 const Profile_Stack = createNativeStackNavigator();
 const User_Stack = createNativeStackNavigator();
+const Post_Stack = createNativeStackNavigator();
+const Notification_Stack = createNativeStackNavigator();
+const Chat_Stack = createNativeStackNavigator();
 
 export const HomeStack = () => {
   return (
@@ -41,8 +67,21 @@ export const HomeStack = () => {
       initialRouteName="Home">
       <Home_Stack.Screen name="Home" component={Home} />
       <Home_Stack.Screen name="User" component={User} />
-      <Home_Stack.Screen name="Post" component={Post} />
+      <Home_Stack.Screen name="PostStack" component={PostStack} />
+      <Home_Stack.Screen name="ChatStack" component={ChatStack} />
     </Home_Stack.Navigator>
+  );
+};
+
+export const ChatStack = () => {
+  return (
+    <Chat_Stack.Navigator
+      screenOptions={{headerShown: false}}
+      initialRouteName="Chats">
+      <Chat_Stack.Screen name="Chats" component={Chats} />
+      <Chat_Stack.Screen name="Messages" component={Messages} />
+      <Chat_Stack.Screen name="UserStack" component={UserStack} />
+    </Chat_Stack.Navigator>
   );
 };
 
@@ -54,7 +93,8 @@ export const UserStack = () => {
       <User_Stack.Screen name="User" component={User} />
       <User_Stack.Screen name="Followers" component={Followers} />
       <User_Stack.Screen name="Followings" component={Followings} />
-      <User_Stack.Screen name="Post" component={Post} />
+      <User_Stack.Screen name="Comments" component={Comments} />
+      <User_Stack.Screen name="PostStack" component={PostStack} />
     </User_Stack.Navigator>
   );
 };
@@ -65,14 +105,16 @@ export const SearchStack = () => {
       screenOptions={{headerShown: false}}
       initialRouteName="Search">
       <Search_Stack.Screen name="Search" component={Search} />
-      <Search_Stack.Screen name="User" component={UserStack} />
-      <Search_Stack.Screen name="Post" component={Post} />
+      <Search_Stack.Screen name="UserStack" component={UserStack} />
+      <Search_Stack.Screen name="PostStack" component={PostStack} />
+      <Search_Stack.Screen name="Explore" component={Explore} />
+      <Search_Stack.Screen name="SearchResult" component={SearchResult} />
     </Search_Stack.Navigator>
   );
 };
 
 export const ProfileStack = () => {
-  const profile = useSelector((state: any) => state.profile);
+  const {user} = useSelector((state: any) => state.auth);
   return (
     <Profile_Stack.Navigator
       screenOptions={{headerShown: false}}
@@ -80,140 +122,207 @@ export const ProfileStack = () => {
       <Profile_Stack.Screen
         name="Profile"
         component={Profile}
-        initialParams={{username: profile?.user?.username}}
+        initialParams={{username: user?.username}}
       />
       <Profile_Stack.Screen name="UpdateProfile" component={UpdateProfile} />
       <Profile_Stack.Screen name="Followers" component={Followers} />
       <Profile_Stack.Screen name="Followings" component={Followings} />
       <Profile_Stack.Screen name="UserStack" component={UserStack} />
+      <Profile_Stack.Screen name="PostStack" component={PostStack} />
+      <Profile_Stack.Screen name="SavedPosts" component={SavedPosts} />
     </Profile_Stack.Navigator>
+  );
+};
+
+export const PostStack = () => {
+  return (
+    <Post_Stack.Navigator
+      initialRouteName="UploadPost"
+      screenOptions={{headerShown: false}}>
+      <Post_Stack.Screen name="UploadPost" component={UploadPost} />
+      <Post_Stack.Screen name="Posts" component={Posts} />
+      <Post_Stack.Screen name="EditPost" component={EditPost} />
+      <Post_Stack.Screen name="Comments" component={Comments} />
+    </Post_Stack.Navigator>
+  );
+};
+
+export const NotificationStack = () => {
+  return (
+    <Notification_Stack.Navigator
+      initialRouteName="Notification"
+      screenOptions={{headerShown: false}}>
+      <Notification_Stack.Screen name="Notification" component={Notification} />
+      <Notification_Stack.Screen name="UserStack" component={UserStack} />
+      <Notification_Stack.Screen name="PostStack" component={PostStack} />
+    </Notification_Stack.Navigator>
   );
 };
 
 export const BottomStack = () => {
   const [errors, setErrors] = useState<any>(null);
-  const [profile, setProfile] = useState({
-    name: '',
-    username: '',
-    email: '',
-    avatar: '',
-  });
-  const {isLoading, error, data, isSuccess} = useGetMyProfileQuery(undefined);
+  const [isModelOpen, setIsModelOpen] = useState<boolean>(false);
+  const {user, token} = useSelector((state: any) => state.auth);
+  const userNotifications = useGetUserNotificationsQuery(user?.username);
+  const {isRead} = useSelector((state: any) => state.notifications);
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    setProfile({
-      name: data?.user.name,
-      username: data?.user.username,
-      email: data?.user.email,
-      avatar: data?.user.avatar.url,
-    });
-  }, [isSuccess]);
-
-  useEffect(() => {
-    setErrors(error);
-  }, [error]);
-
-  if (isSuccess) {
-    dispatch(getProfile(data));
+  if (userNotifications.error) {
+    setErrors(userNotifications.error);
   }
 
-  const clearToken = async () => {
-    try {
-      await AsyncStorage.clear();
-    } catch (error) {
-      console.log(error);
+  useEffect(() => {
+    if (userNotifications.isLoading) {
+      <ActivityIndicator />;
+    } else {
+      console.log('bottom tab');
+      userNotifications.data.notifications.forEach((item: any) => {
+        if (item.isRead === true) {
+          dispatch(setIsRead(true));
+        } else {
+          dispatch(setIsRead(false));
+        }
+      });
     }
-  };
+  }, [userNotifications.isSuccess]);
+
+  useEffect(() => {
+    socket.connect();
+    socket.emit('Join', user);
+    socket.on('Notification', async (notification: any) => {
+      dispatch(setIsRead(false));
+    });
+  }, [socket || user]);
 
   if (errors) {
     if (errors.error) {
-      Alert.alert('Error', errors.error);
+      ToastAndroid.show(errors.error, ToastAndroid.SHORT);
       setErrors(null);
     } else {
       Alert.alert('Error', errors.data.message);
       if (errors.status === 401) {
-        clearToken();
         dispatch(logoutState());
       }
       setErrors(null);
     }
   }
 
+  const handleLogout = () => {
+    // dispatch(removeAllPosts());
+    // dispatch(removeTimelinePosts());
+    socket.disconnect();
+    dispatch(logoutState());
+  };
+
   return (
-    <Bottom_Stack.Navigator
-      screenOptions={{
-        tabBarShowLabel: false,
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#EFF3F5',
-        },
-      }}
-      initialRouteName="HomeStack">
-      <Bottom_Stack.Screen
-        name="HomeStack"
-        component={HomeStack}
-        options={{
-          tabBarIcon: ({focused, color}) => (
-            <Ionicons
-              name="md-home"
-              color={focused ? colors.primaryColor : color}
-              size={25}
-            />
-          ),
+    <>
+      <Modal
+        isVisible={isModelOpen}
+        onBackdropPress={() => setIsModelOpen(!isModelOpen)}
+        onBackButtonPress={() => setIsModelOpen(!isModelOpen)}
+        avoidKeyboard={true}
+        useNativeDriverForBackdrop
+        swipeDirection={['down']}
+        style={{display: 'flex', justifyContent: 'flex-end'}}>
+        <View
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: colors.backgroundColor,
+          }}>
+          <ButtonComponent
+            onPress={handleLogout}
+            title="Logout"
+            primaryFullWidth
+          />
+        </View>
+      </Modal>
+      <Bottom_Stack.Navigator
+        screenOptions={{
+          tabBarShowLabel: false,
+          headerShown: false,
+          tabBarStyle: {
+            backgroundColor: '#EFF3F5',
+          },
         }}
-      />
-      <Bottom_Stack.Screen
-        name="SearchStack"
-        component={SearchStack}
-        options={{
-          tabBarIcon: ({focused, color}) => (
-            <Ionicons
-              name="md-search"
-              color={focused ? colors.primaryColor : color}
-              size={25}
-            />
-          ),
-        }}
-      />
-      <Bottom_Stack.Screen
-        name="Upload"
-        component={UploadPost}
-        options={{
-          tabBarIcon: ({focused, color}) => (
-            <MaterialCommunityIcons
-              name="plus-circle"
-              color={focused ? colors.primaryColor : color}
-              size={30}
-            />
-          ),
-        }}
-      />
-      <Bottom_Stack.Screen
-        name="Notification"
-        component={Notification}
-        options={{
-          tabBarIcon: ({focused, color}) => (
-            <MaterialCommunityIcons
-              name="bell"
-              color={focused ? colors.primaryColor : color}
-              size={25}
-            />
-          ),
-        }}
-      />
-      <Bottom_Stack.Screen
-        name="ProfileStack"
-        component={ProfileStack}
-        options={{
-          tabBarIcon: ({focused, color}) => {
-            return (
+        initialRouteName="HomeStack">
+        <Bottom_Stack.Screen
+          name="HomeStack"
+          component={HomeStack}
+          options={{
+            tabBarIcon: ({focused, color}) => (
+              <Ionicons
+                name="md-home"
+                color={focused ? colors.primaryColor : color}
+                size={25}
+              />
+            ),
+          }}
+        />
+        <Bottom_Stack.Screen
+          name="SearchStack"
+          component={SearchStack}
+          options={{
+            tabBarIcon: ({focused, color}) => (
+              <Ionicons
+                name="md-search"
+                color={focused ? colors.primaryColor : color}
+                size={25}
+              />
+            ),
+          }}
+        />
+        <Bottom_Stack.Screen
+          name="PostStack"
+          component={PostStack}
+          options={{
+            tabBarIcon: ({focused, color}) => (
+              <MaterialCommunityIcons
+                name="plus-circle"
+                color={focused ? colors.primaryColor : color}
+                size={30}
+              />
+            ),
+          }}
+        />
+        <Bottom_Stack.Screen
+          name="NotificationStack"
+          component={NotificationStack}
+          options={{
+            tabBarIcon: ({focused, color}) => (
               <>
-                {isLoading ? (
-                  <ActivityIndicator />
-                ) : (
-                  <>
-                    {profile.avatar === '' ? (
+                <AntDesign
+                  name="heart"
+                  color={focused ? colors.primaryColor : color}
+                  size={25}
+                />
+
+                {isRead === false && (
+                  <View
+                    style={{
+                      backgroundColor: colors.primaryColor,
+                      width: 5,
+                      height: 5,
+                      marginTop: 2,
+                      borderRadius: 5,
+                      justifyContent: 'center',
+                      flexDirection: 'row',
+                    }}></View>
+                )}
+              </>
+            ),
+          }}
+        />
+        <Bottom_Stack.Screen
+          name="ProfileStack"
+          component={ProfileStack}
+          options={{
+            tabBarIcon: ({focused, color}) => {
+              return (
+                <>
+                  <Pressable onLongPress={() => setIsModelOpen(true)}>
+                    {user?.avatar.url === '' ? (
                       <View
                         style={{
                           backgroundColor: colors.backgroundColor,
@@ -227,29 +336,31 @@ export const BottomStack = () => {
                         <ProfileImage height={25} width={25} />
                       </View>
                     ) : (
-                      <Image
-                        source={{uri: profile.avatar}}
-                        style={{
-                          borderColor: focused
-                            ? colors.primaryColor
-                            : colors.backgroundColor,
-                          borderWidth: 2,
-                          borderRadius: 50,
-                          padding: 2,
-                          width: 25,
-                          height: 25,
-                        }}
-                        resizeMode="cover"
-                      />
+                      <>
+                        <Image
+                          source={{uri: user?.avatar.url}}
+                          style={{
+                            borderColor: focused
+                              ? colors.primaryColor
+                              : colors.backgroundColor,
+                            borderWidth: 2,
+                            borderRadius: 50,
+                            padding: 2,
+                            width: 25,
+                            height: 25,
+                          }}
+                          resizeMode="cover"
+                        />
+                      </>
                     )}
-                  </>
-                )}
-              </>
-            );
-          },
-        }}
-      />
-    </Bottom_Stack.Navigator>
+                  </Pressable>
+                </>
+              );
+            },
+          }}
+        />
+      </Bottom_Stack.Navigator>
+    </>
   );
 };
 
@@ -265,54 +376,23 @@ export const AuthStack = () => {
 };
 
 const RootStack = () => {
-  const [authToken, setAuthToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [user, setUser] = useState<any>({});
-  const {token} = useSelector((state: any) => state.auth);
-  const dispatch = useDispatch();
-
-  const getUser = async () => {
-    try {
-      const user = await AsyncStorage.getItem('@user');
-      setUser(user);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const {token, user} = useSelector((state: any) => state.auth);
+  const [isOffilne, setIsOffilne] = useState<boolean>(false);
 
   useEffect(() => {
-    getUser();
-    dispatch(loginState(user));
+    const removeNetInfoSubscription = NetInfo.addEventListener(state => {
+      const offline = !(state.isConnected && state.isInternetReachable);
+      setIsOffilne(offline);
+    });
+
+    return () => removeNetInfoSubscription();
   }, []);
 
-  const getToken = async () => {
-    try {
-      const userToken = await AsyncStorage.getItem('@token');
-      if (userToken) {
-        setAuthToken(userToken);
-        setLoading(false);
-      } else {
-        setAuthToken(null);
-        setLoading(false);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  if (isOffilne) {
+    ToastAndroid.show('No internet connection', ToastAndroid.SHORT);
+  }
 
-  useEffect(() => {
-    getToken();
-  }, [token]);
-
-  return (
-    <>
-      {loading ? (
-        <ActivityIndicator />
-      ) : (
-        <>{authToken ? <BottomStack /> : <AuthStack />}</>
-      )}
-    </>
-  );
+  return <>{token ? <BottomStack /> : <AuthStack />}</>;
 };
 
 export default RootStack;

@@ -33,15 +33,18 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import RNRstart from 'react-native-restart';
 import Camera from '../assets/images/Camera.svg';
 import Modal from 'react-native-modal';
+import socket from '../../socketClient';
 
 const User = ({route, navigation}: any) => {
   const {username} = route.params;
-  const reqUser = useSelector((state: any) => state.profile.user);
+  const reqUser = useSelector((state: any) => state.auth.user);
   const user: any = useGetUserQuery(username);
   const dispatch = useDispatch();
   const [isModelOpen, setIsModelOpen] = useState<boolean>(false);
 
-  const [isFllow, setIsFollow] = useState<boolean>(false);
+  const [isFollow, setIsFollow] = useState<boolean>(false);
+  const [followers, setFollowers] = useState<number>(0);
+  const [followings, setFollowings] = useState<number>(0);
   const Unfollow: any = useUnFollowUserMutation();
   const Follow: any = useFollowUserMutation();
 
@@ -49,6 +52,9 @@ const User = ({route, navigation}: any) => {
     if (user.isLoading) {
       <ActivityIndicator />;
     } else {
+      setFollowers(user.data.user.followers.length);
+      setFollowings(user.data.user.followings.length);
+
       if (user.data.user.followers.includes(reqUser._id)) {
         setIsFollow(true);
       } else {
@@ -58,11 +64,14 @@ const User = ({route, navigation}: any) => {
   }, [user.isSuccess]);
 
   const handleFollowUser = async () => {
+    // socket.emit('Follow', {reciver: reqUser, sender: user.data.user});
+    setFollowers(followers + 1);
     await Follow[0](user.data.user.username);
     setIsFollow(true);
   };
 
   const handleUnFollowUser = async () => {
+    setFollowers(followers - 1);
     await Unfollow[0](user.data.user.username);
     setIsFollow(false);
   };
@@ -131,6 +140,7 @@ const User = ({route, navigation}: any) => {
                     username: user.data.user.username,
                   })
                 }
+                followers={followers}
               />
             </View>
             <View style={styles.followUnfollow}>
@@ -142,7 +152,7 @@ const User = ({route, navigation}: any) => {
                   {Unfollow[1].error.data.message}
                 </Text>
               )}
-              {isFllow ? (
+              {isFollow ? (
                 <ButtonComponent
                   title="Unfollow"
                   onPress={handleUnFollowUser}
@@ -171,7 +181,16 @@ const User = ({route, navigation}: any) => {
                       <Text style={styles.noPostText}>No Posts</Text>
                     </View>
                   ) : (
-                    renderPosts(user.data)
+                    <Pressable
+                      style={styles.postsWrapper}
+                      onPress={() =>
+                        navigation.navigate('PostStack', {
+                          screen: 'Posts',
+                          params: {data: user.data},
+                        })
+                      }>
+                      {renderPosts(user.data)}
+                    </Pressable>
                   )}
                 </>
               )}

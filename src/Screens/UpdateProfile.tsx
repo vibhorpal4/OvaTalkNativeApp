@@ -12,7 +12,7 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import colors from '../assets/colors/colors';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {useGetMyProfileQuery} from '../redux/services/profileService';
+// import {useGetMyProfileQuery} from '../redux/services/profileService';
 import ProfileImage from '../assets/images/Profile.svg';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {editProfile} from '../interfaces/interfaces';

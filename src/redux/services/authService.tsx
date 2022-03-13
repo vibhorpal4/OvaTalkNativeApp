@@ -1,7 +1,8 @@
 import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/dist/query/react';
 
+// const baseUrl: any = {API_URL};
+
 const baseUrl = `https://ovatalk.herokuapp.com`;
-// const baseUrl = `http://192.168.43.88:5000`;
 
 export const authApi = createApi({
   reducerPath: 'authApi',
@@ -16,7 +17,7 @@ export const authApi = createApi({
         method: 'POST',
         body: user,
       }),
-      invalidatesTags: ['Auth'],
+      invalidatesTags: ['Auth', 'Users'],
     }),
     register: builder.mutation({
       query: user => ({

@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   Text,
+  ToastAndroid,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -39,6 +40,12 @@ const Register = ({navigation}: any) => {
   if (isSuccess) {
     dispatch(loginState(data));
     setToken();
+  }
+
+  if (error) {
+    if (error.error) {
+      ToastAndroid.show(error.error, ToastAndroid.SHORT);
+    }
   }
 
   const handleSubmit = async () => {

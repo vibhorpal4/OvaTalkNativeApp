@@ -1,8 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/dist/query/react';
 
+// const baseUrl: any = {API_URL};
+
 const baseUrl = `https://ovatalk.herokuapp.com`;
-// const baseUrl = `http://192.168.43.88:5000`;
 
 export const userApi = createApi({
   reducerPath: 'userApi',
@@ -43,11 +44,19 @@ export const userApi = createApi({
     }),
     getUserFollowers: builder.query({
       query: username => `/api/v1/users/user/${username}/followers`,
-      providesTags: ['Followers', 'Followings', 'Users'],
+      // providesTags: (result, error, arg) =>
+      //   result
+      //     ? [...result.map(({id}: any) => ({type: 'Users' as const, id}))]
+      //     : ['Users'],
+      providesTags: ['Users'],
     }),
     getUserFollowings: builder.query({
       query: username => `/api/v1/users/user/${username}/followings`,
-      providesTags: ['Followings', 'Followers', 'Users'],
+      // providesTags: (result, error, arg) =>
+      //   result
+      //     ? [...result.map(({id}: any) => ({type: 'Users' as const, id}))]
+      //     : ['Users'],
+      providesTags: ['Users'],
     }),
     followUser: builder.mutation({
       query: username => ({
@@ -63,15 +72,35 @@ export const userApi = createApi({
       }),
       invalidatesTags: ['Followers', 'Followings', 'Users'],
     }),
+    getUserByID: builder.query({
+      query: id => `/api/v1/users/user/id/${id}`,
+      // providesTags: (result, error, id) => [{type: 'Users', id}],
+      providesTags: ['Users'],
+    }),
+    searchUser: builder.query({
+      query: user => `/api/v1/users?q=${user}`,
+      // providesTags: (result, error, arg) =>
+      //   result
+      //     ? [...result.map(({id}: any) => ({type: 'Users' as const, id}))]
+      //     : ['Users'],
+      providesTags: ['Users'],
+    }),
+    getUserNotifications: builder.query({
+      query: () => `/api/v1/users/user/my/notifications`,
+      providesTags: ['Users'],
+    }),
   }),
 });
 
 export const {
   useUpdateUserMutation,
   useGetUserQuery,
+  useSearchUserQuery,
   useGetMyProfileQuery,
   useGetUserFollowersQuery,
   useGetUserFollowingsQuery,
   useFollowUserMutation,
   useUnFollowUserMutation,
+  useGetUserByIDQuery,
+  useGetUserNotificationsQuery,
 } = userApi;

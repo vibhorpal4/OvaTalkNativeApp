@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -13,7 +13,7 @@ import {
   Dimensions,
   RefreshControl,
 } from 'react-native';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import ButtonComponent from '../Components/HOC/ButtonComponent';
 import {logoutState} from '../redux/authSlice';
 import {useGetMyProfileQuery} from '../redux/services/profileService';
@@ -24,31 +24,24 @@ import colors from '../assets/colors/colors';
 import ProfileCard from '../Components/ProfileCard';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
-import {useGetUserPostsQuery} from '../redux/services/postService';
+// import {useGetUserPostsQuery} from '../redux/services/postService';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import RNRstart from 'react-native-restart';
 import Camera from '../assets/images/Camera.svg';
 import Modal from 'react-native-modal';
+import {removeAllPosts, removeTimelinePosts} from '../redux/postsSlice';
+import socket from '../../socketClient';
+import BottomSheet from 'react-native-gesture-bottom-sheet';
+
+const {height, width} = Dimensions.get('window');
 
 const Profile = ({route, navigation}: any) => {
   const {username} = route.params;
   const {data, error, isLoading, refetch}: any = useGetUserQuery(username);
-  // const posts = useGetUserPostsQuery(username);
-  const dispatch = useDispatch();
-  const [isModelOpen, setIsModelOpen] = useState<boolean>(false);
-
-  const handleLogout = async () => {
-    try {
-      await AsyncStorage.clear();
-      dispatch(logoutState());
-      RNRstart.Restart();
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const {user} = useSelector((state: any) => state.auth);
+  const bottomSheet = useRef();
 
   const renderPosts = (postData: any) => {
-    return postData.posts.map((post: any) => (
+    return postData?.posts.map((post: any) => (
       <Image
         key={post._id}
         style={styles.postImage}
@@ -59,22 +52,17 @@ const Profile = ({route, navigation}: any) => {
 
   return (
     <View style={styles.container}>
-      <Modal
-        isVisible={isModelOpen}
-        onBackdropPress={() => setIsModelOpen(!isModelOpen)}
-        onBackButtonPress={() => setIsModelOpen(!isModelOpen)}
-        avoidKeyboard={true}
-        useNativeDriverForBackdrop
-        swipeDirection={['down']}
-        style={styles.modelWrapper}>
+      <BottomSheet hasDraggableIcon ref={bottomSheet} height={height / 2.25}>
         <View style={styles.model}>
-          <ButtonComponent
-            onPress={handleLogout}
-            title="Logout"
-            primaryFullWidth
-          />
+          <Pressable
+            style={styles.modelButtonWrapper}
+            onPress={() => navigation.navigate('SavedPosts')}>
+            <Ionicons name="bookmark" size={25} color={colors.textDark} />
+            <Text style={styles.modelText}>Saved</Text>
+          </Pressable>
         </View>
-      </Modal>
+      </BottomSheet>
+
       {isLoading ? (
         <ActivityIndicator />
       ) : (
@@ -86,61 +74,104 @@ const Profile = ({route, navigation}: any) => {
                   screen: 'Home',
                 })
               }>
-              <Ionicons name="chevron-back" size={25} color={colors.textDark} />
+              <Ionicons name="chevron-back" size={30} color={colors.textDark} />
             </Pressable>
-            <Text style={styles.usernameText}>{data.user.username}</Text>
-            <Pressable onPress={() => setIsModelOpen(true)}>
-              <Entypo
-                name="dots-three-vertical"
-                size={20}
-                color={colors.textDark}
-              />
+            {data === undefined && user ? (
+              <Text style={styles.usernameText}>{user.username}</Text>
+            ) : (
+              <Text style={styles.usernameText}>{data?.user.username}</Text>
+            )}
+            <Pressable
+              //  onPress={() => setIsModelOpen(true)}
+              onPress={() => bottomSheet.current.show()}>
+              <Ionicons name="menu" size={30} color={colors.textDark} />
             </Pressable>
           </View>
           <ScrollView
             refreshControl={
               <RefreshControl refreshing={isLoading} onRefresh={refetch} />
-            }>
+            }
+            showsVerticalScrollIndicator={false}>
             <View style={styles.profileWrapper}>
-              <ProfileCard
-                user={data.user}
-                toFollowers={() =>
-                  navigation.navigate('Followers', {
-                    username: data.user.username,
-                  })
-                }
-                toFollowings={() =>
-                  navigation.navigate('Followings', {
-                    username: data.user.username,
-                  })
-                }
-              />
+              {data === undefined && user ? (
+                <>
+                  <ProfileCard
+                    user={user}
+                    toFollowers={() =>
+                      navigation.navigate('Followers', {
+                        username: user.username,
+                      })
+                    }
+                    toFollowings={() =>
+                      navigation.navigate('Followings', {
+                        username: user.username,
+                      })
+                    }
+                  />
+                </>
+              ) : (
+                <>
+                  <ProfileCard
+                    user={data.user}
+                    toFollowers={() =>
+                      navigation.navigate('Followers', {
+                        username: data.user.username,
+                      })
+                    }
+                    toFollowings={() =>
+                      navigation.navigate('Followings', {
+                        username: data.user.username,
+                      })
+                    }
+                  />
+                </>
+              )}
             </View>
             <View style={styles.editProfile}>
               <ButtonComponent
                 title="Edit Profile"
                 onPress={() =>
                   navigation.navigate('UpdateProfile', {
-                    username: data.user.username,
+                    username: data?.user.username,
                   })
                 }
                 outlinedFullWidth
               />
             </View>
             <SafeAreaView style={styles.postsWrapper}>
-              {data.posts.isLoading ? (
-                <View style={styles.noPostWrapper}>
-                  <ActivityIndicator />
-                </View>
+              {data === undefined ? (
+                <>
+                  <View style={styles.noPostWrapper}>
+                    <Camera width={200} height={200} />
+                    <Text style={styles.noPostText}>No Internet</Text>
+                  </View>
+                </>
               ) : (
                 <>
-                  {data.posts.length === 0 ? (
+                  {data.posts.isLoading ? (
                     <View style={styles.noPostWrapper}>
-                      <Camera width={200} height={200} />
-                      <Text style={styles.noPostText}>No Posts</Text>
+                      <ActivityIndicator />
                     </View>
                   ) : (
-                    renderPosts(data)
+                    <>
+                      {data.posts.length === 0 ? (
+                        <View style={styles.noPostWrapper}>
+                          <Camera width={200} height={200} />
+                          <Text style={styles.noPostText}>No Posts</Text>
+                        </View>
+                      ) : (
+                        <Pressable
+                          style={styles.postsWrapper}
+                          onPress={() =>
+                            navigation.navigate('PostStack', {
+                              screen: 'Posts',
+                              params: {data: data},
+                            })
+                          }>
+                          {renderPosts(data)}
+                        </Pressable>
+                      )}
+                    </>
                   )}
                 </>
               )}
@@ -217,8 +248,25 @@ const styles = StyleSheet.create({
   model: {
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: colors.backgroundColor,
+    width,
+    paddingHorizontal: 30,
+    paddingVertical: 20,
+  },
+  modelButtonWrapper: {
+    paddingVertical: 2,
+    width: '100%',
+    marginVertical: 4,
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  modelText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 20,
+    color: colors.textDark,
+    marginHorizontal: 8,
   },
 });
 

@@ -1,6 +1,8 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   ActivityIndicator,
+  FlatList,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -10,15 +12,27 @@ import colors from '../assets/colors/colors';
 import {
   useFollowUserMutation,
   useGetUserFollowersQuery,
+  useUnFollowUserMutation,
 } from '../redux/services/userService';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import UsersListComponents from '../Components/UsersListComponent';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {useSelector} from 'react-redux';
+import NetInfo from '@react-native-community/netinfo';
 
 const Followers = ({route, navigation}: any) => {
   const {username} = route.params;
   const users = useGetUserFollowersQuery(username);
-  const [followUser, {isLoading, isSuccess, error}] = useFollowUserMutation();
+  const [isOffilne, setIsOffilne] = useState<boolean>(false);
+
+  useEffect(() => {
+    const removeNetInfoSubscription = NetInfo.addEventListener(state => {
+      const offline = !(state.isConnected && state.isInternetReachable);
+      setIsOffilne(offline);
+    });
+
+    return () => removeNetInfoSubscription();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -27,23 +41,33 @@ const Followers = ({route, navigation}: any) => {
           <Pressable onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={25} color={colors.textDark} />
           </Pressable>
-          <Text style={styles.usernameText}>{username}</Text>
+          <Text style={styles.headerText}>{username}</Text>
         </View>
       </SafeAreaView>
-      {users.isLoading ? (
-        <ActivityIndicator />
+      {isOffilne ? (
+        <Text style={{color: colors.textDark}}>No internet</Text>
       ) : (
-        <View style={styles.listWrapper}>
-          {users.data.followers.length === 0 ? (
-            <Text style={styles.usernameText}>No Followers</Text>
+        <>
+          {users.isLoading ? (
+            <ActivityIndicator />
           ) : (
-            <UsersListComponents
-              users={users.data.followers}
-              isLoading={users.isLoading}
-              refresh={users.refetch}
-            />
+            <View style={styles.listWrapper}>
+              {users.data.followers.length === 0 ? (
+                <View style={styles.noUsers}>
+                  <Text style={styles.headerText}>No Followers</Text>
+                </View>
+              ) : (
+                <>
+                  <UsersListComponents
+                    users={users.data.followers}
+                    isLoading={users.isLoading}
+                    refresh={users.refetch}
+                  />
+                </>
+              )}
+            </View>
           )}
-        </View>
+        </>
       )}
     </View>
   );
@@ -63,19 +87,21 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     justifyContent: 'flex-start',
   },
-  usernameText: {
+  headerText: {
     fontFamily: 'Poppins-Bold',
     color: colors.textDark,
     fontSize: 20,
     paddingHorizontal: 10,
   },
   listWrapper: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
     height: '100%',
     width: '100%',
     paddingTop: 15,
+  },
+  noUsers: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

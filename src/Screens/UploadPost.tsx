@@ -6,6 +6,8 @@ import {
   FlatList,
   Image,
   Platform,
+  RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -85,15 +87,15 @@ const UploadPost = ({navigation}: any) => {
     if (result.errorMessage) {
       Alert.alert('Error', result.errorMessage);
     }
-    // let data: any = [];
 
-    // result.assets?.forEach((asset: any) => {
-    //   data.push(asset);
-    //   console.log(data);
-    //   setPost({...post, images: data});
-    // });
+    let data: any = [];
 
-    setPost({...post, images: result.assets});
+    result.assets?.forEach((asset: any) => {
+      data.push(asset);
+      setPost({...post, images: data});
+    });
+
+    // setPost({...post, images: result.assets});
   };
 
   // const onCamera1 = async () => {
@@ -128,10 +130,14 @@ const UploadPost = ({navigation}: any) => {
     const formData = new FormData();
 
     formData.append('caption', post?.caption);
-    post?.images.forEach((image: any) => {
-      formData.append('images', `data:${image.type};base64,${image.base64}`);
-    });
 
+    post?.images.forEach((image: any) => {
+      if (image.type === 'video/mp4') {
+        formData.append('images', image.uri);
+      } else {
+        formData.append('images', `data:${image.type};base64,${image.base64}`);
+      }
+    });
     await uploadPost(formData);
     setPost({
       caption: '',
@@ -208,6 +214,7 @@ const UploadPost = ({navigation}: any) => {
           numberOfLines={6}
           placeholderTextColor={colors.textLight}
           onChangeText={(caption: string) => setPost({...post, caption})}
+          value={post.caption}
         />
         <View style={styles.preview}>
           {post?.images ? (
@@ -319,7 +326,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
-    height: '100%',
+    minHeight: '100%',
     borderTopLeftRadius: 35,
     borderTopRightRadius: 35,
   },

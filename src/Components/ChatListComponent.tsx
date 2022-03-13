@@ -1,19 +1,20 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {
   ActivityIndicator,
   Dimensions,
   RefreshControl,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
-
+import ChatCardComponent from './ChatCardComponent';
 import UserListCard from './UserListCard';
-import {SafeAreaView} from 'react-native-safe-area-context';
 
 const {width, height} = Dimensions.get('window');
 
-const UsersListComponents = ({users, isLoading, refresh}: any) => {
+const ChatListComponent = ({chats, isLoading, refresh}: any) => {
   return (
     <View style={styles.container}>
       {isLoading ? (
@@ -24,8 +25,8 @@ const UsersListComponents = ({users, isLoading, refresh}: any) => {
             refreshControl={
               <RefreshControl refreshing={isLoading} onRefresh={refresh} />
             }>
-            {users?.map((user: any) => (
-              <UserListCard key={user._id} item={user} />
+            {chats?.map((chat: any) => (
+              <ChatCardComponent key={chat._id} item={chat} />
             ))}
           </ScrollView>
         </SafeAreaView>
@@ -41,4 +42,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default UsersListComponents;
+export default ChatListComponent;

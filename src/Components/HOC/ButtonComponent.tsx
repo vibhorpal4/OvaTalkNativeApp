@@ -52,7 +52,7 @@ const ButtonComponent = ({
           ) : (
             <>
               {icon ? icon : null}
-              <Text style={styles.title}> {title}</Text>
+              <Text style={styles.outlinedTitle}> {title}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryColor,
     color: 'white',
     height: 40,
-    width: 140,
+    width: 120,
     borderRadius: 5,
     display: 'flex',
     flexDirection: 'row',
@@ -98,15 +98,18 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
   },
   outlined: {
-    backgroundColor: colors.primaryColor,
+    backgroundColor: colors.backgroundColor,
     color: 'white',
     height: 40,
-    width: 140,
+    width: 120,
     borderRadius: 5,
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    borderColor: colors.primaryColor,
+    borderWidth: 1,
+    textAlign: 'center',
   },
   outlinedFullWidth: {
     backgroundColor: colors.backgroundColor,

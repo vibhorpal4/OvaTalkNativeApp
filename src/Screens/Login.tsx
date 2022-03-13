@@ -4,6 +4,7 @@ import {
   Alert,
   StyleSheet,
   Text,
+  ToastAndroid,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -16,7 +17,7 @@ import {login} from '../interfaces/interfaces';
 import {useLoginMutation} from '../redux/services/authService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {loginState} from '../redux/authSlice';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import RNRestart from 'react-native-restart';
 
 const Login = ({navigation}: any) => {
@@ -30,22 +31,18 @@ const Login = ({navigation}: any) => {
   const [login, {isLoading, error, isSuccess, data, isError}]: any =
     useLoginMutation();
 
-  const setToken = async () => {
-    try {
-      await AsyncStorage.setItem('@token', JSON.stringify(data.token));
-      await AsyncStorage.setItem('@user', JSON.stringify(data.user));
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   if (isSuccess) {
-    setToken();
     dispatch(loginState(data));
   }
 
+  if (error) {
+    if (error.error) {
+      ToastAndroid.show(error.error, ToastAndroid.SHORT);
+    }
+  }
+
   const handleSubmit = async () => {
-    login(user);
+    await login(user);
   };
 
   return (

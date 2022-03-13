@@ -3,26 +3,27 @@ import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
 import colors from '../assets/colors/colors';
 import ProfileImage from '../assets/images/Profile.svg';
 
-const ProfileCard = ({user, toFollowers, toFollowings}: any) => {
-  const {username, avatar, name, posts, followers, followings, bio} = user;
+const ProfileCard = ({user, toFollowers, toFollowings, followers}: any) => {
   return (
     <View style={styles.wrapper}>
       <View style={styles.profilePicWrapper}>
-        {avatar.url === '' ? (
+        {user?.avatar.url === '' ? (
           <ProfileImage width={80} height={80} />
         ) : (
-          <Image style={styles.profilePic} source={{uri: avatar.url}} />
+          <Image style={styles.profilePic} source={{uri: user?.avatar.url}} />
         )}
         <View style={styles.profileDetailsWrapper}>
           <View style={styles.profileDetails}>
-            <Text style={styles.profileDetailsText}>{posts.length}</Text>
+            <Text style={styles.profileDetailsText}>{user?.posts.length}</Text>
             <Text style={styles.profileDetailsTextLabel}>Posts</Text>
           </View>
           <View style={styles.profileDetails}>
             <Pressable
               onPress={toFollowers}
               style={styles.profileDetailsContainer}>
-              <Text style={styles.profileDetailsText}>{followers.length}</Text>
+              <Text style={styles.profileDetailsText}>
+                {followers ? <>{followers}</> : <>{user?.followers.length}</>}
+              </Text>
               <Text style={styles.profileDetailsTextLabel}>Followers</Text>
             </Pressable>
           </View>
@@ -30,15 +31,17 @@ const ProfileCard = ({user, toFollowers, toFollowings}: any) => {
             <Pressable
               style={styles.profileDetailsContainer}
               onPress={toFollowings}>
-              <Text style={styles.profileDetailsText}>{followings.length}</Text>
+              <Text style={styles.profileDetailsText}>
+                {user?.followings.length}
+              </Text>
               <Text style={styles.profileDetailsTextLabel}>Followings</Text>
             </Pressable>
           </View>
         </View>
       </View>
       <View style={styles.userDeatilsWrapper}>
-        <Text style={styles.userDetailsText}>{name}</Text>
-        <Text style={styles.userDetailsText}>{bio}</Text>
+        <Text style={styles.userDetailsText}>{user?.name}</Text>
+        <Text style={styles.userDetailsText}>{user?.bio}</Text>
       </View>
     </View>
   );
